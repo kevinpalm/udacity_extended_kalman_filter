@@ -2,6 +2,7 @@
 #include "tools.h"
 #include "Eigen/Dense"
 #include <iostream>
+#include "math.h"
 
 using namespace std;
 using Eigen::MatrixXd;
@@ -51,10 +52,16 @@ FusionEKF::FusionEKF() {
 		0, 1, 0, 0,
 		0, 0, 1, 0,
 		0, 0, 0, 1;
-        
-  //set the process and measurement noises
-  float noise_ax = 9;
-  float noise_ay = 9;
+
+  //Process covariance matrix = "process noise"
+  Q_ = MatrixXd(4, 4);
+  Q_ << 9, 0, 0, 0,
+		0, 9, 0, 0,
+		0, 0, 9, 0,
+		0, 0, 0, 9;
+  
+  //save pi
+  float pi = 3.1415926535897932;
 
 }
 
@@ -76,20 +83,30 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       * Create the covariance matrix.
       * Remember: you'll need to convert radar from polar to cartesian coordinates.
     */
-    // first measurement
+    // first measurement... we'll assume velocity is 0 for start
     cout << "EKF: " << endl;
     ekf_.x_ = VectorXd(4);
-    ekf_.x_ << 1, 1, 1, 1;
+    ekf_.x_ << 1, 1, 0, 0;
+    
+    // Create filter
+    KalmanFilter filter;
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
-      /**
-      Convert radar from polar to cartesian coordinates and initialize state.
-      */
+      
+      // Calculate x position
+      ekf_.x_(0) = (cos(measurement_pack.phi)%pi)*measurement_pack.ro_;
+      
+      // Calculate y position
+      ekf_.x_(1) = (sin(measurement_pack.phi)%pi)*measurement_pack.ro_;
+      
+      // Initialize filter
+      filter.Init(ekf_.x_, P_, F_, H_, R_radar_, Q_);
+      
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
-      /**
-      Initialize state.
-      */
+
+      // Initialize filter
+      filter.Init(ekf_.x_, P_, F_, H_, R_lidar_, Q_);
       
     }
 
