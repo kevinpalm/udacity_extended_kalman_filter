@@ -54,11 +54,11 @@ FusionEKF::FusionEKF() {
 		0, 0, 0, 1;
 
   //Process covariance matrix = "process noise"
-  Q_ = MatrixXd(4, 4);
-  Q_ << 9, 0, 0, 0,
-		0, 9, 0, 0,
-		0, 0, 9, 0,
-		0, 0, 0, 9;
+  Q_ = VectorXd(4);
+  Q_ << 1, 1, 1, 1;
+  
+  //save timestamp at zero
+  float t_ = 0.0;
   
   //save pi
   float pi = 3.1415926535897932;
@@ -77,19 +77,11 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    *  Initialization
    ****************************************************************************/
   if (!is_initialized_) {
-    /**
-    TODO:
-      * Initialize the state ekf_.x_ with the first measurement.
-      * Create the covariance matrix.
-      * Remember: you'll need to convert radar from polar to cartesian coordinates.
-    */
+
     // first measurement... we'll assume velocity is 0 for start
     cout << "EKF: " << endl;
     ekf_.x_ = VectorXd(4);
     ekf_.x_ << 1, 1, 0, 0;
-    
-    // Create filter
-    KalmanFilter filter;
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       
@@ -100,13 +92,13 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       ekf_.x_(1) = (sin(measurement_pack.phi)%pi)*measurement_pack.ro_;
       
       // Initialize filter
-      filter.Init(ekf_.x_, P_, F_, H_, R_radar_, Q_);
+      ekf_.Init(ekf_.x_, P_, F_, H_, R_radar_, Q_);
       
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
 
       // Initialize filter
-      filter.Init(ekf_.x_, P_, F_, H_, R_lidar_, Q_);
+      ekf_.Init(ekf_.x_, P_, F_, H_, R_lidar_, Q_);
       
     }
 
@@ -118,14 +110,19 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   /*****************************************************************************
    *  Prediction
    ****************************************************************************/
-
-  /**
-   TODO:
-     * Update the state transition matrix F according to the new elapsed time.
-      - Time is measured in seconds.
-     * Update the process noise covariance matrix.
-     * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
-   */
+   
+   //Update the state transition matrix F according to the new elapsed time
+   float delta_t_ = measurement_pack.timestamp_ - t_
+   ekf_.F_(0, 2) = delta_t;
+   ekf_.F_(1, 3) = delta_t;
+   t_ = measurement_pack.timestamp_;
+   
+   //Update the process noise covariance matrix.
+   ekf_.Q_(0) = (9 * (timedelta * timedelta)) / 2;
+   ekf_.Q_(1) = (9 * (timedelta * timedelta)) / 2;
+   ekf_.Q_(2) = 9 * timedelta;
+   ekf_.Q_(3) = 9 * timedelta;
+   
 
   ekf_.Predict();
 
