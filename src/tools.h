@@ -25,6 +25,22 @@ public:
   */
   Eigen::MatrixXd CalculateJacobian(const Eigen::VectorXd& x_state);
 
+private:
+
+ // jacobian matrix
+ Eigen::MatrixXd Hj;
+
+  //recover state parameters
+  float px;
+  float py;
+  float vx;
+  float vy;
+
+  //pre-compute a set of terms to avoid repeated calculation
+  float c1;
+  float c2;
+  float c3;
+
 };
 
 #endif /* TOOLS_H_ */

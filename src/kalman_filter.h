@@ -64,6 +64,23 @@ public:
    */
   void UpdateEKF(const Eigen::VectorXd &z);
 
+private:
+  // Gain helpers
+  Eigen::VectorXd z_pred;
+  Eigen::VectorXd y;
+  Eigen::MatrixXd Ht;
+  Eigen::MatrixXd S;
+  Eigen::MatrixXd Si;
+  Eigen::MatrixXd PHt;
+  Eigen::MatrixXd K;
+
+  // Error helper
+  long x_size;
+  Eigen::MatrixXd I;
+
+  // EKF helper
+  Eigen::VectorXd polar_x_;
+
 };
 
 #endif /* KALMAN_FILTER_H_ */

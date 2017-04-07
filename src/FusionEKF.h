@@ -44,6 +44,23 @@ private:
   Eigen::MatrixXd R_radar_;
   Eigen::MatrixXd H_laser_;
   Eigen::MatrixXd Hj_;
+
+  // initialization and helper matrix
+  Eigen::MatrixXd F_;
+  Eigen::MatrixXd P_;
+  Eigen::MatrixXd Q_;
+  Eigen::MatrixXd z_laser_;
+  Eigen::MatrixXd z_radar_;
+
+  // helpers for polar/Cartesian conversions and process noise
+  float pi;
+  float x_noise;
+  float y_noise;
+
+  // time helpers
+  float t_;
+  float delta_t;
+  
 };
 
 #endif /* FusionEKF_H_ */
