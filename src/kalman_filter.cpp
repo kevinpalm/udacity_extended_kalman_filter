@@ -55,14 +55,15 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   TODO:
     * update the state by using Extended Kalman Filter equations
   */
+
+	cout << "Predicted state:" << endl;
     // Convert predicted state to polar (h(x'))
-    VectorXd polar_x_(3);
-    polar_x_(0) = sqrt(pow(x_(0), 2.0) + pow(x_(1), 2.0));
-    polar_x_(1) = atan(x_(1)/x_(0));
-    polar_x_(2) = (x_(0)*x_(2) + x_(1)*x_(3))/sqrt(pow(x_(0), 2.0) + pow(x_(1), 2.0));
+    VectorXd z_pred(3);
+    z_pred(0) = sqrt(pow(x_(0), 2.0) + pow(x_(1), 2.0));
+    z_pred(1) = atan(x_(1)/x_(0));
+    z_pred(2) = (x_(0)*x_(2) + x_(1)*x_(3))/sqrt(pow(x_(0), 2.0) + pow(x_(1), 2.0));   
   
  	// Compute the gain
-	VectorXd z_pred = H_ * polar_x_;
 	VectorXd y = z - z_pred;
 	MatrixXd Ht = H_.transpose();
 	MatrixXd S = H_ * P_ * Ht + R_;

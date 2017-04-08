@@ -78,9 +78,6 @@ private:
   long x_size;
   Eigen::MatrixXd I;
 
-  // EKF helper
-  Eigen::VectorXd polar_x_;
-
 };
 
 #endif /* KALMAN_FILTER_H_ */
