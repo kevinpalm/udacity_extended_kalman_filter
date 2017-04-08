@@ -49,11 +49,9 @@ private:
   Eigen::MatrixXd F_;
   Eigen::MatrixXd P_;
   Eigen::MatrixXd Q_;
-  Eigen::MatrixXd z_laser_;
-  Eigen::MatrixXd z_radar_;
 
   // helpers for polar/Cartesian conversions and process noise
-  float pi;
+  double pi;
   float x_noise;
   float y_noise;
 

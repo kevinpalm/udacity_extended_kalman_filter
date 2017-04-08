@@ -1,7 +1,9 @@
 #include "kalman_filter.h"
+#include <iostream>
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
+using namespace std;
 
 KalmanFilter::KalmanFilter() {}
 
@@ -55,9 +57,9 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   */
     // Convert predicted state to polar (h(x'))
     VectorXd polar_x_(3);
-    polar_x_(0) = sqrt(pow(x_(0), 2.0) + pow(x_(1), 2.0))
-    polar_x_(1) = atan2(x_(1)/x_(0))
-    polar_x_(2) = (x_(0)*x_(2) + x_(1)*x_(3))/sqrt(pow(x_(0), 2.0) + pow(x_(1), 2.0))
+    polar_x_(0) = sqrt(pow(x_(0), 2.0) + pow(x_(1), 2.0));
+    polar_x_(1) = atan(x_(1)/x_(0));
+    polar_x_(2) = (x_(0)*x_(2) + x_(1)*x_(3))/sqrt(pow(x_(0), 2.0) + pow(x_(1), 2.0));
   
  	// Compute the gain
 	VectorXd z_pred = H_ * polar_x_;

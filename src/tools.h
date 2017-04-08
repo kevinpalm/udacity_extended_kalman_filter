@@ -27,8 +27,11 @@ public:
 
 private:
 
- // jacobian matrix
- Eigen::MatrixXd Hj;
+  // rmse
+  Eigen::VectorXd rmse;
+
+  // jacobian matrix
+  Eigen::MatrixXd Hj;
 
   //recover state parameters
   float px;
