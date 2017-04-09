@@ -51,12 +51,7 @@ void KalmanFilter::Update(const VectorXd &z) {
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
-  /**
-  TODO:
-    * update the state by using Extended Kalman Filter equations
-  */
 
-	cout << "Predicted state:" << endl;
     // Convert predicted state to polar (h(x'))
     VectorXd z_pred(3);
     z_pred(0) = sqrt(pow(x_(0), 2.0) + pow(x_(1), 2.0));

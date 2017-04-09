@@ -25,6 +25,9 @@ public:
   */
   Eigen::MatrixXd CalculateJacobian(const Eigen::VectorXd& x_state);
 
+  // check if the update should use the jacobian
+  bool usej;
+
 private:
 
   // rmse

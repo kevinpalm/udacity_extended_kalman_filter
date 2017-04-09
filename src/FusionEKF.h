@@ -32,11 +32,16 @@ public:
   KalmanFilter ekf_;
 
 private:
-  // check whether the tracking toolbox was initiallized or not (first measurement)
+  // check whether the tracking toolbox was initialized or not (first measurement)
   bool is_initialized_;
+  
+  // previous state for handling simultanious readings
+  Eigen::VectorXd previous_state_;
 
   // previous timestamp
   long previous_timestamp_;
+  long current_timestamp_;
+  long delta_t;
 
   // tool object used to compute Jacobian and RMSE
   Tools tools;
@@ -44,6 +49,10 @@ private:
   Eigen::MatrixXd R_radar_;
   Eigen::MatrixXd H_laser_;
   Eigen::MatrixXd Hj_;
+  
+  // Observed states
+  Eigen::VectorXd z_laser_;
+  Eigen::VectorXd z_radar_;
 
   // initialization and helper matrix
   Eigen::MatrixXd F_;
@@ -56,8 +65,7 @@ private:
   float y_noise;
 
   // time helpers
-  float t_;
-  float delta_t;
+  
   
 };
 

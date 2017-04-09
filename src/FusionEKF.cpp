@@ -61,6 +61,10 @@ FusionEKF::FusionEKF() {
   //save process noise sigma squared
   float x_noise = 9.0;
   float y_noise = 9.0;
+  
+  // placeholders for z
+  z_laser_ = VectorXd(2);
+  z_radar_ = VectorXd(3);
 
 }
 
@@ -82,8 +86,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     ekf_.x_ << 1, 1, 0, 0;
     
     //save timestamp
-    float t_ = measurement_pack.timestamp_;
-    float delta_t;
+    current_timestamp_ = measurement_pack.timestamp_;
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       
@@ -107,6 +110,12 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       ekf_.Init(ekf_.x_, P_, F_, H_laser_, R_laser_, Q_);
       
     }
+    
+    // Record the state
+    cout << "Starting x_" << endl;
+    cout << ekf_.x_ << endl;
+    cout << "Starting P_" << endl;
+    cout << ekf_.P_ << endl;
 
     // done initializing, no need to predict or update
     is_initialized_ = true;
@@ -118,36 +127,54 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    ****************************************************************************/
    
    //Update the state transition matrix F according to the new elapsed time
-   delta_t = measurement_pack.timestamp_ - t_;
-   ekf_.F_(0, 2) = delta_t;
-   ekf_.F_(1, 3) = delta_t;
-   t_ = measurement_pack.timestamp_;
+   previous_timestamp_ = current_timestamp_;
+   current_timestamp_ = measurement_pack.timestamp_;
+   delta_t = current_timestamp_ - previous_timestamp_;
+   cout << "Previous Timestamp:" << endl;
+   cout << previous_timestamp_ << endl;
+   cout << "Current timestamp:" << endl;
+   cout << current_timestamp_ << endl;
+   cout << "Delta T:" << endl;
+   cout << delta_t << endl;
    
-   //Update the process noise covariance matrix.
-   ekf_.Q_(0, 0) = pow(delta_t, 4.0)/4.0*x_noise;
-   ekf_.Q_(0, 2) = pow(delta_t, 3.0)/2*x_noise;
-   ekf_.Q_(1, 1) = pow(delta_t, 4.0)/4.0*y_noise;
-   ekf_.Q_(1, 3) = pow(delta_t, 3.0)/2*y_noise;
-   ekf_.Q_(2, 0) = pow(delta_t, 3.0)/2*x_noise;
-   ekf_.Q_(2, 2) = pow(delta_t, 2.0)*x_noise;
-   ekf_.Q_(3, 1) = pow(delta_t, 3.0)/2*x_noise;
-   ekf_.Q_(3, 3) = pow(delta_t, 2.0)*x_noise;
-
-   ekf_.Predict();
+   // Only predict if delta_t is not 0 (no simultaneous readings)
+   // Skipping is the same as running a prediction with 0 timedelta...
+   if (delta_t >= 0) {
+	   
+	   // Update the F matrix
+	   ekf_.F_(0, 2) = delta_t;
+	   ekf_.F_(1, 3) = delta_t;
+	   
+	   //Update the process noise covariance matrix.
+	   ekf_.Q_(0, 0) = pow(delta_t, 4.0)/4.0*x_noise;
+	   ekf_.Q_(0, 2) = pow(delta_t, 3.0)/2*x_noise;
+	   ekf_.Q_(1, 1) = pow(delta_t, 4.0)/4.0*y_noise;
+	   ekf_.Q_(1, 3) = pow(delta_t, 3.0)/2*y_noise;
+	   ekf_.Q_(2, 0) = pow(delta_t, 3.0)/2*x_noise;
+	   ekf_.Q_(2, 2) = pow(delta_t, 2.0)*x_noise;
+	   ekf_.Q_(3, 1) = pow(delta_t, 3.0)/2*x_noise;
+	   ekf_.Q_(3, 3) = pow(delta_t, 2.0)*x_noise;
+	   
+	   // Record the old state
+	   ekf_.Predict();
+	}
+   
+   // print the output
+   cout << "x_predicted = " << ekf_.x_ << endl;
+   cout << "P_predicted = " << ekf_.P_ << endl;
 
   /*****************************************************************************
    *  Update
    ****************************************************************************/
 
-  /**
-   TODO:
-     * Use the sensor type to perform the update step.
-     * Update the state and covariance matrices.
-   */
-
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
 	  
     // Radar updates
+    
+    //pass along observations
+    z_radar_(0) = measurement_pack.raw_measurements_(0);
+    z_radar_(1) = measurement_pack.raw_measurements_(1);
+    z_radar_(2) = measurement_pack.raw_measurements_(2);
     
     //update the covariance matrix
     ekf_.R_ = R_radar_;
@@ -155,13 +182,22 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     //calculate jacovian and ensure H_
     Hj_ = tools.CalculateJacobian(ekf_.x_);
     ekf_.H_ = Hj_;
+    cout << Hj_ << endl;
     
-    //run the update
-    ekf_.UpdateEKF(measurement_pack.raw_measurements_);
+    //run the update, if the jacovian is good
+    if (tools.usej) {
+		ekf_.UpdateEKF(z_radar_);
+    }
     
   } else {
 	  
     // Laser updates
+    cout << "Raw laser Measurement:" << endl;
+    cout << measurement_pack.raw_measurements_ << endl;
+    
+    //Pass along observations
+    z_laser_(0) = measurement_pack.raw_measurements_(0);
+    z_laser_(1) = measurement_pack.raw_measurements_(1);
     
     //update the covariance matrix
     ekf_.R_ = R_laser_;
@@ -170,7 +206,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     ekf_.H_ = H_laser_;
     
     // Run the update
-    ekf_.Update(measurement_pack.raw_measurements_);
+    ekf_.Update(z_laser_);
 
   }
 

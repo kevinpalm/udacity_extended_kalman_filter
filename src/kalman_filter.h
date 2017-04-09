@@ -48,7 +48,6 @@ public:
   /**
    * Prediction Predicts the state and the state covariance
    * using the process model
-   * @param delta_T Time between k and k+1 in s
    */
   void Predict();
 
