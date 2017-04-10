@@ -56,11 +56,11 @@ FusionEKF::FusionEKF() {
 		0, 0, 0, 0;
   
   //save pi
-  double pi = 3.1415926535897932;
+  pi = 3.1415926535897932;
   
   //save process noise sigma squared
-  float x_noise = 9.0;
-  float y_noise = 9.0;
+  x_noise = 9.0;
+  y_noise = 9.0;
   
   // placeholders for z
   z_laser_ = VectorXd(2);
@@ -138,12 +138,14 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    cout << delta_t << endl;
    
    // Only predict if delta_t is not 0 (no simultaneous readings)
-   // Skipping is the same as running a prediction with 0 timedelta...
    if (delta_t >= 0) {
 	   
 	   // Update the F matrix
 	   ekf_.F_(0, 2) = delta_t;
 	   ekf_.F_(1, 3) = delta_t;
+	   
+	   cout << "F Matrix:" << endl;
+	   cout << ekf_.F_ << endl;
 	   
 	   //Update the process noise covariance matrix.
 	   ekf_.Q_(0, 0) = pow(delta_t, 4.0)/4.0*x_noise;
@@ -154,6 +156,9 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 	   ekf_.Q_(2, 2) = pow(delta_t, 2.0)*x_noise;
 	   ekf_.Q_(3, 1) = pow(delta_t, 3.0)/2*x_noise;
 	   ekf_.Q_(3, 3) = pow(delta_t, 2.0)*x_noise;
+	   
+	   cout << "Q Matrix:" << endl;
+	   cout << ekf_.Q_ << endl;
 	   
 	   // Record the old state
 	   ekf_.Predict();
