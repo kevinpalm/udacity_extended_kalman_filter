@@ -139,8 +139,6 @@ int main(int argc, char* argv[]) {
   for (size_t k = 0; k < N; ++k) {
     // start filtering from the second frame (the speed is unknown in the first
     // frame)
-    cout << "Raw measurement pack" << endl;
-    cout << measurement_pack_list[k].raw_measurements_ << endl;
     fusionEKF.ProcessMeasurement(measurement_pack_list[k]);
 
     // output the estimation

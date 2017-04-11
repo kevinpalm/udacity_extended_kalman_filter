@@ -25,7 +25,7 @@ void KalmanFilter::Predict() {
 	x_ = F_ * x_;
 
 	// Predict the error
-	MatrixXd Ft = F_.transpose();
+	Ft = F_.transpose();
 	P_ = F_ * P_ * Ft + Q_;
 
 }
@@ -33,45 +33,45 @@ void KalmanFilter::Predict() {
 void KalmanFilter::Update(const VectorXd &z) {
 	
 	// Compute the gain
-	VectorXd z_pred = H_ * x_;
-	VectorXd y = z - z_pred;
-	MatrixXd Ht = H_.transpose();
-	MatrixXd S = H_ * P_ * Ht + R_;
-	MatrixXd Si = S.inverse();
-	MatrixXd PHt = P_ * Ht;
+	z_pred = H_ * x_;
+	y = z - z_pred;
+	Ht = H_.transpose();
+	S = H_ * P_ * Ht + R_;
+	Si = S.inverse();
+	PHt = P_ * Ht;
 	MatrixXd K = PHt * Si;
 
 	// Update the state
 	x_ = x_ + (K * y);
 	
 	// Update the error
-	long x_size = x_.size();
-	MatrixXd I = MatrixXd::Identity(x_size, x_size);
+	x_size = x_.size();
+	I = MatrixXd::Identity(x_size, x_size);
 	P_ = (I - K * H_) * P_;
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
 
     // Convert predicted state to polar (h(x'))
-    VectorXd z_pred(3);
+    z_pred = VectorXd(3);
     z_pred(0) = sqrt(pow(x_(0), 2.0) + pow(x_(1), 2.0));
     z_pred(1) = atan(x_(1)/x_(0));
-    z_pred(2) = (x_(0)*x_(2) + x_(1)*x_(3))/sqrt(pow(x_(0), 2.0) + pow(x_(1), 2.0));   
+    z_pred(2) = (x_(0)*x_(2) + x_(1)*x_(3))/z_pred(0);
   
  	// Compute the gain
-	VectorXd y = z - z_pred;
-	MatrixXd Ht = H_.transpose();
-	MatrixXd S = H_ * P_ * Ht + R_;
-	MatrixXd Si = S.inverse();
-	MatrixXd PHt = P_ * Ht;
-	MatrixXd K = PHt * Si;
+	y = z - z_pred;
+	Ht = H_.transpose();
+	S = H_ * P_ * Ht + R_;
+	Si = S.inverse();
+	PHt = P_ * Ht;
+	K = PHt * Si;
 
 	// Update the state
 	x_ = x_ + (K * y);
 	
 	// Update the error
-	long x_size = x_.size();
-	MatrixXd I = MatrixXd::Identity(x_size, x_size);
+	x_size = x_.size();
+	I = MatrixXd::Identity(x_size, x_size);
 	P_ = (I - K * H_) * P_;
  
  

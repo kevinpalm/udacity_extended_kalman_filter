@@ -72,6 +72,7 @@ private:
   Eigen::MatrixXd Si;
   Eigen::MatrixXd PHt;
   Eigen::MatrixXd K;
+  Eigen::MatrixXd Ft;
 
   // Error helper
   long x_size;

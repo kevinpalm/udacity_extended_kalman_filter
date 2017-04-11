@@ -43,10 +43,10 @@ FusionEKF::FusionEKF() {
   
   //(initial) state covariance = "uncertanity"
   P_ = MatrixXd(4, 4);
-  P_ << 10, 0, 0, 0,
-		0, 10, 0, 0,
-		0, 0, 10, 0,
-		0, 0, 0, 10;
+  P_ << 1000, 0, 0, 0,
+		0, 1000, 0, 0,
+		0, 0, 1000, 0,
+		0, 0, 0, 1000;
 
   //Process covariance matrix = "process noise"
   Q_ = MatrixXd(4, 4);
@@ -110,12 +110,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       ekf_.Init(ekf_.x_, P_, F_, H_laser_, R_laser_, Q_);
       
     }
-    
-    // Record the state
-    cout << "Starting x_" << endl;
-    cout << ekf_.x_ << endl;
-    cout << "Starting P_" << endl;
-    cout << ekf_.P_ << endl;
 
     // done initializing, no need to predict or update
     is_initialized_ = true;
@@ -126,47 +120,27 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    *  Prediction
    ****************************************************************************/
    
-   //Update the state transition matrix F according to the new elapsed time
+   //Update the delta t
    previous_timestamp_ = current_timestamp_;
    current_timestamp_ = measurement_pack.timestamp_;
-   delta_t = current_timestamp_ - previous_timestamp_;
-   cout << "Previous Timestamp:" << endl;
-   cout << previous_timestamp_ << endl;
-   cout << "Current timestamp:" << endl;
-   cout << current_timestamp_ << endl;
-   cout << "Delta T:" << endl;
-   cout << delta_t << endl;
+   delta_t = (current_timestamp_ - previous_timestamp_) / 1000000.0;
+	   
+   // Update the F matrix
+   ekf_.F_(0, 2) = delta_t;
+   ekf_.F_(1, 3) = delta_t;
    
-   // Only predict if delta_t is not 0 (no simultaneous readings)
-   if (delta_t >= 0) {
-	   
-	   // Update the F matrix
-	   ekf_.F_(0, 2) = delta_t;
-	   ekf_.F_(1, 3) = delta_t;
-	   
-	   cout << "F Matrix:" << endl;
-	   cout << ekf_.F_ << endl;
-	   
-	   //Update the process noise covariance matrix.
-	   ekf_.Q_(0, 0) = pow(delta_t, 4.0)/4.0*x_noise;
-	   ekf_.Q_(0, 2) = pow(delta_t, 3.0)/2*x_noise;
-	   ekf_.Q_(1, 1) = pow(delta_t, 4.0)/4.0*y_noise;
-	   ekf_.Q_(1, 3) = pow(delta_t, 3.0)/2*y_noise;
-	   ekf_.Q_(2, 0) = pow(delta_t, 3.0)/2*x_noise;
-	   ekf_.Q_(2, 2) = pow(delta_t, 2.0)*x_noise;
-	   ekf_.Q_(3, 1) = pow(delta_t, 3.0)/2*x_noise;
-	   ekf_.Q_(3, 3) = pow(delta_t, 2.0)*x_noise;
-	   
-	   cout << "Q Matrix:" << endl;
-	   cout << ekf_.Q_ << endl;
-	   
-	   // Record the old state
-	   ekf_.Predict();
-	}
+   //Update the process noise covariance matrix.
+   ekf_.Q_(0, 0) = pow(delta_t, 4.0)/4.0*x_noise;
+   ekf_.Q_(0, 2) = pow(delta_t, 3.0)/2*x_noise;
+   ekf_.Q_(1, 1) = pow(delta_t, 4.0)/4.0*y_noise;
+   ekf_.Q_(1, 3) = pow(delta_t, 3.0)/2*y_noise;
+   ekf_.Q_(2, 0) = pow(delta_t, 3.0)/2*x_noise;
+   ekf_.Q_(2, 2) = pow(delta_t, 2.0)*x_noise;
+   ekf_.Q_(3, 1) = pow(delta_t, 3.0)/2*y_noise;
+   ekf_.Q_(3, 3) = pow(delta_t, 2.0)*y_noise;
    
-   // print the output
-   cout << "x_predicted = " << ekf_.x_ << endl;
-   cout << "P_predicted = " << ekf_.P_ << endl;
+   // Record the old state
+   ekf_.Predict();
 
   /*****************************************************************************
    *  Update
@@ -187,7 +161,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     //calculate jacovian and ensure H_
     Hj_ = tools.CalculateJacobian(ekf_.x_);
     ekf_.H_ = Hj_;
-    cout << Hj_ << endl;
     
     //run the update, if the jacovian is good
     if (tools.usej) {
@@ -197,8 +170,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   } else {
 	  
     // Laser updates
-    cout << "Raw laser Measurement:" << endl;
-    cout << measurement_pack.raw_measurements_ << endl;
     
     //Pass along observations
     z_laser_(0) = measurement_pack.raw_measurements_(0);
